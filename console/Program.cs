@@ -9,7 +9,7 @@ namespace PascalTriangle
 	{
 		public static async Task Main()
 		{
-			const ulong row = 3000; // Typical stack overflow will happen in less than 3000.
+			const ulong row = 1000000; // Typical stack overflow will happen in less than 3000.
 			const ulong column = row / 2;
 			var rows = new Row.Collection();
 			await Search(row, column);
@@ -24,9 +24,11 @@ namespace PascalTriangle
 				watch.Stop();
 
 				Console.WriteLine(value);
-				Console.WriteLine($"Time Elapsed: {watch.ElapsedMilliseconds} ms");
+				Console.WriteLine("Time Elapsed: {0}", watch.Elapsed);
 				Console.WriteLine();
 			}
+
+			Console.ReadKey();
 		}
 	}
 }

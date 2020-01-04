@@ -35,7 +35,7 @@ namespace PascalTriangle
 			// dedupe the index:
 			if (index > Mid) index = Number - index + 1;
 
-			return await Values.GetOrAdd(index, GetEntry).Value; // By using a Lazy we guarantee pessimistic concurrency.
+			return await Values.GetOrAdd(index, GetEntry).Value.ConfigureAwait(false); // By using a Lazy we guarantee pessimistic concurrency (only 1 task runs).
 
 			Lazy<Task<BigInteger>> GetEntry(ulong key)
 				 => new Lazy<Task<BigInteger>>(() => GetValue(key));
@@ -46,7 +46,7 @@ namespace PascalTriangle
 				var row = Rows.GetRowAt(Number - 1);
 				var a = row.GetValueAt(key - 1);
 				var b = row.GetValueAt(key);
-				return await a + await b;
+				return await a.ConfigureAwait(false) + await b.ConfigureAwait(false);
 			}
 		}
 
