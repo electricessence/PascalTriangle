@@ -13,7 +13,7 @@ namespace PascalTriangle
 			const ulong column = row / 2;
 			var rows = new Row.Collection();
 			await Search(row, column);
-			await Search(row + 1, column); // Should be near instantaneous after previous run.
+			//await Search(row + 1, column); // Should be near instantaneous after previous run.
 
 			async ValueTask Search(ulong row, ulong column)
 			{

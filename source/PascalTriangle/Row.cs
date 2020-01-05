@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -15,6 +16,8 @@ namespace PascalTriangle
 		// 2) to help with concurrency in parallel situations.
 		// 3) using ulong instead of int.
 		readonly ConcurrentDictionary<ulong, Lazy<Task<BigInteger>>> Values = new ConcurrentDictionary<ulong, Lazy<Task<BigInteger>>>();
+
+		Dictionary<ulong, BigInteger>? _fullRow;
 
 		public Row(ulong number, Collection collection)
 		{
@@ -35,7 +38,16 @@ namespace PascalTriangle
 			// dedupe the index:
 			if (index > Mid) index = Number - index + 1;
 
-			return await Values.GetOrAdd(index, GetEntry).Value.ConfigureAwait(false); // By using a Lazy we guarantee pessimistic concurrency (only 1 task runs).
+			// The index also corresponds to the first full row needed.
+			for (var r = index; r > 0; r--)
+			{
+
+			}
+
+			var fullRow = _fullRow;
+			return fullRow == null
+				? await Values.GetOrAdd(index, GetEntry).Value.ConfigureAwait(false) // By using a Lazy we guarantee pessimistic concurrency (only 1 task runs);
+				: fullRow[index];
 
 			Lazy<Task<BigInteger>> GetEntry(ulong key)
 				 => new Lazy<Task<BigInteger>>(() => GetValue(key));
@@ -58,6 +70,8 @@ namespace PascalTriangle
 
 			public Row GetRowAt(ulong index)
 				=> Rows.GetOrAdd(index, key => new Row(key, this));
+
+			public ulong FullRowCount { get; internal set; }
 
 			public Row this[ulong index] => GetRowAt(index);
 
