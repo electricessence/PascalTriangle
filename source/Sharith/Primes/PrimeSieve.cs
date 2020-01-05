@@ -5,17 +5,18 @@
 // Comments mail to: peter(at)luschny.de
 // Created: 2010-03-01
 
+
+using Sharith.MathUtils;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Sharith.Primes
 {
-
-	using Sharith.MathUtils;
-	using System;
-	using System.Collections;
-	using System.Collections.Generic;
-	using System.IO;
-	using System.Numerics;
-	using System.Threading;
-
 	/// <summary>
 	/// This class implements a prime number sieve using
 	/// an algorithm given by Eratosthenes (276-194 B.C.)
@@ -143,9 +144,7 @@ namespace Sharith.Primes
 		/// <returns>a simple estimate of the number of primes &lt;= n.
 		/// </returns>
 		private static int GetPiHighBound(long n)
-		{
-			return n < 17 ? 6 : (int)System.Math.Floor(n / (System.Math.Log(n) - 1.5));
-		}
+			=> n < 17 ? 6 : (int)Math.Floor(n / (Math.Log(n) - 1.5));
 
 		/// <summary>
 		/// Get the n-th prime number.
@@ -189,9 +188,7 @@ namespace Sharith.Primes
 		/// </summary>
 		/// <returns>The prime number collection.</returns>
 		public IPrimeCollection GetPrimeCollection()
-		{
-			return new PrimeCollection(this);
-		}
+			=> new PrimeCollection(this);
 
 		/// <summary>
 		/// Gives the collection of the prime numbers in the given interval.
@@ -200,9 +197,7 @@ namespace Sharith.Primes
 		/// <param name="high">The higher bound of the collection interval.</param>
 		/// <returns>The collection of the prime numbers between low and high.</returns>
 		public IPrimeCollection GetPrimeCollection(int low, int high)
-		{
-			return new PrimeCollection(this, new PositiveRange(low, high));
-		}
+			=> new PrimeCollection(this, new PositiveRange(low, high));
 
 		/// <summary>
 		/// Gives every other prime number in the given interval.
@@ -211,9 +206,7 @@ namespace Sharith.Primes
 		/// <param name="high">The higher bound of the collection interval.</param>
 		/// <returns>The collection of the prime numbers between low and high.</returns>
 		public IPrimeCollection GetPrimeCollectionEveryOther(int low, int high)
-		{
-			return new PrimeCollection(this, new PositiveRange(low, high), 2);
-		}
+			=> new PrimeCollection(this, new PositiveRange(low, high), 2);
 
 		/// <summary>
 		/// Gives the collection of the prime numbers in the given range.
@@ -221,9 +214,9 @@ namespace Sharith.Primes
 		/// <param name="range">The range of the collection.</param>
 		/// <returns>The prime number collection.</returns>
 		public IPrimeCollection GetPrimeCollection(PositiveRange range)
-		{
-			return new PrimeCollection(this, range);
-		}
+			=> new PrimeCollection(this, range);
+
+
 
 		/// <summary>
 		/// Gives the Product of the prime numbers in the given sieveRange.
@@ -232,8 +225,8 @@ namespace Sharith.Primes
 		/// <param name="high">The upper bound of the collection.</param>
 		/// <returns>The Product of the prime numbers between low and high.
 		/// </returns>
-		public BigInteger GetPrimorial(int low, int high)
-			=> GetPrimorial(new PositiveRange(low, high));
+		public ValueTask<BigInteger> GetPrimorialAsync(int low, int high)
+			=> GetPrimorialAsync(new PositiveRange(low, high));
 
 		/// <summary>
 		/// Computes the Product of the prime numbers in the given sieveRange.
@@ -241,12 +234,12 @@ namespace Sharith.Primes
 		/// <param name="range">The sieveRange of the enumeration.</param>
 		/// <returns>The Product of the prime numbers in the enumeration.
 		/// </returns>
-		public BigInteger GetPrimorial(PositiveRange range)
+		public async ValueTask<BigInteger> GetPrimorialAsync(PositiveRange range)
 		{
 			var pc = new PrimeCollection(this, range);
 			return pc.GetSliceParameters(out int start, out int size)
 				? BigInteger.One
-				: XMath.Product(primes, start, size);
+				: await XMath.ProductAsync(primes, start, size);
 		}
 
 		/// <summary>
@@ -256,18 +249,16 @@ namespace Sharith.Primes
 		/// <param name="low">Lower bound of the sieveRange of the enumeration.</param>
 		/// <param name="high">Higher bound of the sieveRange of the enumeration.</param>
 		/// <returns>The Product of the prime numbers in the enumeration.</returns>
-		public BigInteger GetPrimorial(int low, int high, int increment)
+		public async ValueTask<BigInteger> GetPrimorialAsync(int low, int high, int increment)
 		{
 			if (increment == 1)
-			{
-				return GetPrimorial(new PositiveRange(low, high));
-			}
+				return await GetPrimorialAsync(new PositiveRange(low, high));
 
 			var range = new PositiveRange(low, high);
 			var pc = new PrimeCollection(this, range, increment);
 			return pc.GetSliceParameters(out int start, out int size)
 				? BigInteger.One
-				: XMath.Product(primes, start, size, increment);
+				: await XMath.ProductAsync(primes, start, size, increment);
 		}
 
 		////////////////////// Private Inner Class ///////////////////////

@@ -5,72 +5,74 @@
 // Comments mail to: peter(at)luschny.de
 // Created: 2010-03-01
 
+
+using Sharith.Primes;
+using System;
+using System.Buffers;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
+using XMath = Sharith.MathUtils.XMath;
+
 // Same algorithm as PrimeSwing
 // but computes swing(n) asynchronous.
 
 namespace Sharith.Factorial
 {
-
-	using Sharith.Primes;
-	using System;
-	using System.Linq;
-	using System.Numerics;
-	using System.Threading.Tasks;
-	using XMath = MathUtils.XMath;
-
-	public class ParallelPrimeSwing : IFactorialFunction
+	public static class PrimeSwing
 	{
-		public string Name => "ParallelPrimeSwing       ";
-
-		const int Smallswing = 65;
-		IAsyncResult[] results;
-		delegate BigInteger SwingDelegate(PrimeSieve sieve, int n);
-		SwingDelegate swingDelegate;
-		int taskCounter;
-
-		public BigInteger Factorial(int n)
+		public static async ValueTask<BigInteger> FactorialAsync(int n)
 		{
 			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), n, "Negative values not supported.");
 			if (n < 20) return XMath.Factorial((byte)n);
 
+			ValueTask<BigInteger>[] results;
+			int taskCounter;
+
 			var sieve = new PrimeSieve(n);
-			results = new IAsyncResult[XMath.FloorLog2(n)];
-			swingDelegate = Swing; taskCounter = 0;
-			var N = n;
+			results = new ValueTask<BigInteger>[XMath.FloorLog2(n)];
+			taskCounter = 0;
 
 			// -- It is more efficient to add the big swings
 			// -- first and the small ones later!
-			while (N >= Smallswing)
+			var N = n;
+			while (N >= SmallOddSwing.Length)
 			{
-				results[taskCounter++] = swingDelegate.BeginInvoke(sieve, N, null, null);
+				results[taskCounter++] = SwingAsync(sieve, N);
 				N >>= 1;
 			}
 
-			return RecFactorial(n) << (n - XMath.BitCount(n));
+			return await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n));
+
+			async ValueTask<BigInteger> RecFactorialAsync(int n)
+			{
+				if (n < 2) return BigInteger.One;
+				await Task.Yield();
+
+				var recFact = await RecFactorialAsync(n / 2);
+				var sqrFact = BigInteger.Pow(recFact, 2);
+
+				var swing = n < SmallOddSwing.Length
+						  ? SmallOddSwing[n]
+						  : await results[--taskCounter].ConfigureAwait(false);
+
+				return sqrFact * swing;
+			}
 		}
 
-		private BigInteger RecFactorial(int n)
+		public static ValueTask<BigInteger> FactorialAsync(ulong n)
+			=> n > int.MaxValue
+				? throw new ArgumentOutOfRangeException(nameof(n), n, "Greater than int.MaxValue not yet supported")
+				: FactorialAsync((int)n);
+
+		private static async ValueTask<BigInteger> SwingAsync(PrimeSieve sieve, int n)
 		{
-			if (n < 2) return BigInteger.One;
-
-			var recFact = RecFactorial(n / 2);
-			var sqrFact = BigInteger.Pow(recFact, 2);
-
-			var swing = n < Smallswing
-					  ? SmallOddSwing[n]
-					  : swingDelegate.EndInvoke(results[--taskCounter]);
-
-			return sqrFact * swing;
-		}
-
-		private static BigInteger Swing(PrimeSieve sieve, int n)
-		{
-			var primorial = Task.Factory.StartNew(() => sieve.GetPrimorial(n / 2 + 1, n));
+			var primorial = sieve.GetPrimorialAsync(n / 2 + 1, n);
+			await Task.Yield();
 			var count = 0;
 			var rootN = XMath.FloorSqrt(n);
 			var aPrimes = sieve.GetPrimeCollection(3, rootN);
 			var bPrimes = sieve.GetPrimeCollection(rootN + 1, n / 3);
-
 			var primeList = new int[aPrimes.NumberOfPrimes + bPrimes.NumberOfPrimes];
 
 			foreach (var prime in aPrimes)
@@ -96,8 +98,11 @@ namespace Sharith.Factorial
 				primeList[count++] = prime;
 			}
 
-			var primeProduct = XMath.Product(primeList, 0, count);
-			return primeProduct * primorial.Result;
+			var primeProduct = XMath.ProductAsync(primeList, 0, count);
+			var result = await primeProduct.ConfigureAwait(false)
+				* await primorial.ConfigureAwait(false);
+			//ArrayPool<int>.Shared.Return(primeList);
+			return result;
 		}
 
 		static readonly BigInteger[] SmallOddSwing = {

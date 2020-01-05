@@ -6,6 +6,7 @@
 // Created: 2010-03-01
 
 using System;
+using System.Buffers;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -48,32 +49,25 @@ namespace Sharith.MathUtils
 			: (w < 1 << 29 ? (w < 1 << 28 ? 28 : 29)
 			: (w < 1 << 30 ? 30 : 31))));
 
-		public static ulong BitLength(BigInteger w)
-		{
-			if (w <= byte.MaxValue)
-				return (ulong)BitLength((byte)w);
+		//public static ulong BitLength(BigInteger w)
+		//{
+		//	if (w <= byte.MaxValue)
+		//		return (ulong)BitLength((byte)w);
 
-			if (w <= int.MaxValue)
-				return (ulong)BitLength((int)w);
+		//	if (w <= int.MaxValue)
+		//		return (ulong)BitLength((int)w);
 
-			ulong bitLength = 0;
-			do
-			{
-				bitLength++;
-			}
-			while ((w >>= 1) != 0);
-			return bitLength;
-		}
+		//	ulong bitLength = 0;
+		//	do
+		//	{
+		//		bitLength++;
+		//	}
+		//	while ((w >>= 1) != 0);
+		//	return bitLength;
+		//}
 
 		public static int BitLength(byte b)
 			=> b < 8 ? b < 2 ? b < 1 ? 0 : 1 : b < 4 ? 2 : 3 : b < 32 ? b < 16 ? 4 : 5 : b < 64 ? 6 : 7;
-
-		//public static int BitLength(BigInteger n)
-		//{
-		//    byte[] bytes = (n.Sign * n).ToByteArray();
-		//    int i = bytes.Length - 1;
-		//    return (i << 3) + BitLength(bytes[i]);
-		//}
 
 		/// <summary>
 		/// High bound for number of primes not exeeding n.
@@ -86,16 +80,6 @@ namespace Sharith.MathUtils
 				? 6
 				: (int)System.Math.Floor(n / (System.Math.Log(n) - 1.5));
 		}
-
-		/// <summary>
-		/// Logarithm to base 10.
-		/// </summary>
-		/// <param name="value"></param>
-		/// <returns><tt>Log<sub>10</sub>value</tt>.</returns>
-		//public static double Log10(double value)
-		//{
-		//    return System.Math.Log(value) * 0.43429448190325176;
-		//}
 
 		/// <summary>
 		/// Logarithm to base 2.
@@ -112,10 +96,7 @@ namespace Sharith.MathUtils
 		/// <returns></returns>
 		public static int FloorLog2(int n)
 		{
-			if (n <= 0)
-			{
-				throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
-			}
+			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
 			return BitLength(n) - 1;
 		}
 
@@ -189,19 +170,6 @@ namespace Sharith.MathUtils
 					- (1 - 7 / (30 * a * a)) / (6 * a)) / 2;
 		}
 
-		public static string AsymptFactorial(int x)
-		{
-			// error of order O(x^-5)
-			return Exp(AsymptFactorial((double)x));
-		}
-
-		public static long ExactDecimalDigitsPerMillisecond(int n, long ms)
-		{
-			double x = AsymptFactorial((double)n);
-			double l = x * 0.43429448190325176D; // x/Math.log(10);
-			double lsd = ms == 0 ? l : l / ms;
-			return (long)System.Math.Truncate(0.5 + lsd);
-		}
 
 		public static string Exp(double x)
 		{
@@ -211,22 +179,6 @@ namespace Sharith.MathUtils
 			string mat = (Convert.ToString(m)).Substring(0, 6);
 			return mat + " E+" + Convert.ToString((int)e);
 		}
-
-#pragma warning disable IDE0060 // Remove unused parameter
-		public static double AsymptSwingingFactorial(double x)
-#pragma warning restore IDE0060 // Remove unused parameter
-		{
-			// TODO: not yet implemented
-			return 1;
-		}
-
-		public static void ClearOpCounter()
-		{
-			// --
-		}
-
-		public static long[] GetOpCounts()
-			=> new long[] { 1 };
 
 		private static readonly long[] SmallFactorials = {
 			1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800,
@@ -252,170 +204,132 @@ namespace Sharith.MathUtils
 		const int ParallelThreshold = 1024;
 
 		// <returns>a[start]*a[start+1]*...*a[start+length-1]</returns>
-		public static BigInteger Product(int[] a, int start, int length)
+		public static async ValueTask<BigInteger> ProductAsync(int[] a, int start, int length)
 		{
 			if (length == 0) return BigInteger.One;
+			await Task.Yield();
 
 			int len = (length + 1) / 2;
-			long[] b = new long[len];
-
-			int i, j, k;
-
-			for (k = 0, i = start, j = start + length - 1; i < j; i++, k++, j--)
+			long[] b = ArrayPool<long>.Shared.Rent(len);
+			try
 			{
-				b[k] = a[i] * (long)a[j];
+				int i, j, k;
+
+				for (k = 0, i = start, j = start + length - 1; i < j; i++, k++, j--)
+				{
+					b[k] = a[i] * (long)a[j];
+				}
+
+				if (i == j) b[k++] = a[j];
+
+				if (k < ParallelThreshold)
+					return await RecProductAsync(b, 0, k - 1);
+
+				var left = RecProductAsync(b, 0, (k - 1) / 2);
+				var right = RecProductAsync(b, ((k - 1) / 2) + 1, k - 1);
+				return await left.ConfigureAwait(false)
+					* await right.ConfigureAwait(false);
 			}
-
-			if (i == j) b[k++] = a[j];
-
-			if (k > ParallelThreshold)
+			finally
 			{
-				var task = Task.Factory.StartNew(() => RecProduct(b, ((k - 1) / 2) + 1, k - 1));
-
-				var left = RecProduct(b, 0, (k - 1) / 2);
-				var right = task.Result;
-				return left * right;
+				ArrayPool<long>.Shared.Return(b);
 			}
-
-			return RecProduct(b, 0, k - 1);
 		}
 
-		public static BigInteger Product(int[] a, int start, int length, int increment)
+		public static async ValueTask<BigInteger> ProductAsync(int[] a, int start, int length, int increment)
 		{
 			if (length == 0) return BigInteger.One;
+			await Task.Yield();
 
 			int len = (1 + (length + 1) / 2) / increment;
-			long[] b = new long[len];
-
-			int i, k = 0;
-			bool toggel = false;
-
-			for (i = start; i < start + length; i += increment)
+			long[] b = ArrayPool<long>.Shared.Rent(len);
+			try
 			{
-				if ((toggel = !toggel)) b[k] = a[i];
-				else b[k++] *= a[i];
-			}
+				int i, k = 0;
+				bool toggel = false;
 
-			if (len > ParallelThreshold)
+				for (i = start; i < start + length; i += increment)
+				{
+					if ((toggel = !toggel)) b[k] = a[i];
+					else b[k++] *= a[i];
+				}
+
+				if (len < ParallelThreshold)
+					return await RecProductAsync(b, 0, len - 1);
+
+				var left = RecProductAsync(b, 0, (len - 1) / 2);
+				var right = RecProductAsync(b, ((len - 1) / 2) + 1, len - 1);
+				return await left.ConfigureAwait(false)
+					* await right.ConfigureAwait(false);
+			}
+			finally
 			{
-				var task = Task.Factory.StartNew(() => RecProduct(b, ((len - 1) / 2) + 1, len - 1));
-
-				var left = RecProduct(b, 0, (len - 1) / 2);
-				var right = task.Result;
-				return left * right;
+				ArrayPool<long>.Shared.Return(b);
 			}
-
-			return RecProduct(b, 0, len - 1);
 		}
 
-		public static BigInteger Product(int[] a)
-			=> Product(a, 0, a.Length);
+		public static ValueTask<BigInteger> ProductAsync(int[] a)
+			=> ProductAsync(a, 0, a.Length);
 
-		public static BigInteger Product(long[] a, int len)
+		public static async ValueTask<BigInteger> ProductAsync(long[] a, int len)
 		{
 			int n = len - 1;
-			if (len > ParallelThreshold)
-			{
-				var task = Task.Factory.StartNew(() => RecProduct(a, n / 2 + 1, n));
-				var left = RecProduct(a, 0, n / 2);
-				var right = task.Result;
-				return left * right;
-			}
+			if (len < ParallelThreshold)
+				return await RecProductAsync(a, 0, n);
 
-			return RecProduct(a, 0, n);
+			await Task.Yield();
+			var left = RecProductAsync(a, 0, n / 2);
+			var right = RecProductAsync(a, n / 2 + 1, n);
+			return await left.ConfigureAwait(false)
+				* await right.ConfigureAwait(false);
 		}
 
-		public static BigInteger Product(long[] a)
-			=> Product(a, a.Length);
+		public static ValueTask<BigInteger> ProductAsync(long[] a)
+			=> ProductAsync(a, a.Length);
 
-		public static BigInteger RecProduct(long[] s, int n, int m)
+		public static async ValueTask<BigInteger> RecProductAsync(long[] s, int n, int m)
 		{
 			if (n == m) return new BigInteger(s[n]);
 			if (n > m) return BigInteger.One;
+			await Task.Yield();
 
 			int k = (n + m) >> 1;
-			return RecProduct(s, n, k) * RecProduct(s, k + 1, m);
+			var left = RecProductAsync(s, n, k);
+			var right = RecProductAsync(s, k + 1, m);
+			return await left.ConfigureAwait(false)
+				* await right.ConfigureAwait(false);
 		}
 
-		private static BigInteger BigRecProduct(BigInteger[] s, int n, int m)
+		private static async ValueTask<BigInteger> BigRecProductAsync(BigInteger[] s, int n, int m)
 		{
 			if (n == m) return s[n];
 			if (n > m) return BigInteger.One;
 
+			await Task.Yield();
 			int k = (n + m) >> 1;
-			return BigRecProduct(s, n, k) * BigRecProduct(s, k + 1, m);
+			var left = BigRecProductAsync(s, n, k);
+			var right = BigRecProductAsync(s, k + 1, m);
+			return await left.ConfigureAwait(false)
+				* await right.ConfigureAwait(false);
 		}
 
-		public static BigInteger Product(BigInteger[] a, int start, int len)
+		public static async ValueTask<BigInteger> ProductAsync(BigInteger[] a, int start, int len)
 		{
 			int n = len - 1;
-			if (len > ParallelThreshold)
-			{
-				var task = Task.Factory.StartNew(() => BigRecProduct(a, start + (n / 2) + 1, start + n));
-				var left = BigRecProduct(a, start, start + n / 2);
-				return left * task.Result;
-			}
+			if (len < ParallelThreshold)
+				return await BigRecProductAsync(a, start, n);
 
-			return BigRecProduct(a, start, n);
+			await Task.Yield();
+			var left = BigRecProductAsync(a, start, start + n / 2);
+			var right = BigRecProductAsync(a, start + (n / 2) + 1, start + n);
+			return await left.ConfigureAwait(false)
+				* await right.ConfigureAwait(false);
 		}
 
-		public static BigInteger Product(BigInteger[] a)
-		{
-			return BigRecProduct(a, 0, a.Length - 1);
-		}
+		public static ValueTask<BigInteger> ProductAsync(BigInteger[] a)
+			=> BigRecProductAsync(a, 0, a.Length - 1);
 
 	}
 }
 
-
-//static public class MathFun
-//{
-//    // Calibrate the treshhold
-//    private const int THRESHOLD_PRODUCT_SERIAL = 128;
-
-//    //static public BigInteger ProductSerial(long[] seq, int start, int len)
-//    //{
-//    //    var prod = new BigInteger(seq[start]);
-//    //    for (int i = start + 1; i < start + len; i++)
-//    //    {
-//    //        prod *= seq[i];
-//    //    }
-//    //    return prod;
-//    //}
-
-//    static public BigInteger Product(long[] seq, int start, int len)
-//    {
-//        if (len <= THRESHOLD_PRODUCT_SERIAL)
-//        {
-//            // return ProductSerial(seq, start, len);
-//            var rprod = new BigInteger(seq[start]);
-
-//            for (int i = start + 1; i < start + len; i++)
-//            {
-//                rprod *= seq[i];
-//            }
-//            return rprod;
-//        }
-//        else
-//        {
-//            int halfLen = len / 2;
-
-//            Task<BigInteger> task = Task.Factory.StartNew(() => Product(seq, start, halfLen));
-//            var rprod = Product(seq, start + halfLen, len - halfLen);
-//            return task.Result * rprod;
-
-//            // rprod = BigInteger.Zero; BigInteger lprod = BigInteger.Zero;
-//            //Parallel.Invoke(
-//            //    () => { rprod = Product(seq, start, halfLen); },
-//            //    () => { lprod = Product(seq, start + halfLen, len - halfLen); }
-//            //);
-//            //rprod = lprod * rprod;
-//        }
-//    }
-
-//    private MathFun() { }
-
-// System.Diagnostics.Debug.Assert((0 <= start) & (length <= a.Length),
-// System.Reflection.MethodBase.GetCurrentMethod().Name + " failed: range not subrange of a");
-//}
 

@@ -1,7 +1,50 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<TargetFramework>netstandard2.1</TargetFramework>
 	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Factorial\Binomial.cs" />
+    <Compile Remove="Factorial\FactorialAdditiveMoessner.cs" />
+    <Compile Remove="Factorial\FactorialAdditiveSwing.cs" />
+    <Compile Remove="Factorial\FactorialBalkan.cs" />
+    <Compile Remove="Factorial\FactorialBalkanBig.cs" />
+    <Compile Remove="Factorial\FactorialBoitenSplit.cs" />
+    <Compile Remove="Factorial\FactorialCrandallPomerance.cs" />
+    <Compile Remove="Factorial\FactorialFactors.cs" />
+    <Compile Remove="Factorial\FactorialHyper.cs" />
+    <Compile Remove="Factorial\FactorialLinearDifference.cs" />
+    <Compile Remove="Factorial\FactorialMyFactorial.cs" />
+    <Compile Remove="Factorial\FactorialParallelForPrimeSplit.cs" />
+    <Compile Remove="Factorial\FactorialParallelPrimeSplit.cs" />
+    <Compile Remove="Factorial\FactorialParallelPrimeSwingList.cs" />
+    <Compile Remove="Factorial\FactorialParallelSplit.cs" />
+    <Compile Remove="Factorial\FactorialParallelSplitPrimeSwing.cs" />
+    <Compile Remove="Factorial\FactorialParallelSwing.cs" />
+    <Compile Remove="Factorial\FactorialPoorMans.cs" />
+    <Compile Remove="Factorial\FactorialPrimeBorwein.cs" />
+    <Compile Remove="Factorial\FactorialPrimeLeenstra.cs" />
+    <Compile Remove="Factorial\FactorialPrimeSchoenhage.cs" />
+    <Compile Remove="Factorial\FactorialPrimeSwing.cs" />
+    <Compile Remove="Factorial\FactorialPrimeSwingAllInOne.cs" />
+    <Compile Remove="Factorial\FactorialPrimeSwingCache.cs" />
+    <Compile Remove="Factorial\FactorialPrimeSwingList.cs" />
+    <Compile Remove="Factorial\FactorialPrimeVardi.cs" />
+    <Compile Remove="Factorial\FactorialProductNaive.cs" />
+    <Compile Remove="Factorial\FactorialProductRecursive.cs" />
+    <Compile Remove="Factorial\FactorialSplit.cs" />
+    <Compile Remove="Factorial\FactorialSquaredDifference.cs" />
+    <Compile Remove="Factorial\FactorialSquaredDiffProd.cs" />
+    <Compile Remove="Factorial\FactorialSwing.cs" />
+    <Compile Remove="Factorial\FactorialSwingDouble.cs" />
+    <Compile Remove="Factorial\FactorialSwingRational.cs" />
+    <Compile Remove="Factorial\FactorialSwingRationalDouble.cs" />
+    <Compile Remove="Factorial\FactorialSwingSimple.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Open.ChannelExtensions" Version="3.2.2" />
+  </ItemGroup>
 
 </Project>

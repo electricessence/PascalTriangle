@@ -27,14 +27,10 @@ namespace PascalTriangle
 				yield return e.Current;
 		}
 
-		public static BigInteger Of(ulong value)
-		{
-			var factorial = new PrimeSwing();
-			return factorial.Factorial(value);
-		}
 
-		public static Task<BigInteger> OfAsync(ulong value)
-			=> Task.Run(() => Of(value));
+		public static ValueTask<BigInteger> OfAsync(ulong value)
+			=> PrimeSwing.FactorialAsync(value);
+
 
 	}
 }

@@ -5,10 +5,10 @@
 // Comments mail to: peter(at)luschny.de
 // Created: 2010-03-01
 
+using Sharith.MathUtils;
+
 namespace Sharith.Primes
 {
-	using Sharith.MathUtils;
-
 	/// <summary>
 	///  The interface for a prime number sieve.
 	///  Much of its functionality is given through PrimeCollections.

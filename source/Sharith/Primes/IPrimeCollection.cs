@@ -5,12 +5,12 @@
 // Comments mail to: peter(at)luschny.de
 // Created: 2010-03-01
 
+
+using Sharith.MathUtils;
+using System.Collections.Generic;
+
 namespace Sharith.Primes
 {
-
-	using Sharith.MathUtils;
-	using System.Collections.Generic;
-
 	/// <summary>
 	///  An interface for enumerating a prime number sieve.
 	///
