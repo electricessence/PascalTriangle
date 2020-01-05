@@ -20,20 +20,18 @@ namespace PascalTriangle.Tests
 		[Fact]
 		public async Task BasicExpectationTests()
 		{
-			// https://projecteuler.net/problem=148
-			var triangle = new Triangle();
-			Assert.Equal(BigInteger.One, await triangle.ValueAtAsync(0, 0));
-			Assert.Equal(BigInteger.Zero, await triangle.ValueAtAsync(0, 1));
-			Assert.Equal(BigInteger.One, await triangle.ValueAtAsync(1, 0));
-			Assert.Equal(BigInteger.One, await triangle.ValueAtAsync(2, 0));
-			Assert.Equal(BigInteger.One, await triangle.ValueAtAsync(1, 1));
-			Assert.Equal(BigInteger.One, await triangle.ValueAtAsync(3, 3));
-			Assert.Equal(2, await triangle.ValueAtAsync(2, 1));
-			Assert.Equal(3, await triangle.ValueAtAsync(3, 1));
-			Assert.Equal(6, await triangle.ValueAtAsync(4, 2));
-			Assert.Equal(4, await triangle.ValueAtAsync(4, 3));
-			Assert.Equal(15, await triangle.ValueAtAsync(6, 2));
-			Assert.Equal(35, await triangle.ValueAtAsync(7, 3));
+			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(0, 0));
+			Assert.Equal(BigInteger.Zero, await Triangle.ValueAtAsync(0, 1));
+			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(1, 0));
+			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(2, 0));
+			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(1, 1));
+			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(3, 3));
+			Assert.Equal(2, await Triangle.ValueAtAsync(2, 1));
+			Assert.Equal(3, await Triangle.ValueAtAsync(3, 1));
+			Assert.Equal(6, await Triangle.ValueAtAsync(4, 2));
+			Assert.Equal(4, await Triangle.ValueAtAsync(4, 3));
+			Assert.Equal(15, await Triangle.ValueAtAsync(6, 2));
+			Assert.Equal(35, await Triangle.ValueAtAsync(7, 3));
 		}
 	}
 }

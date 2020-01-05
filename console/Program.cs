@@ -7,8 +7,6 @@ namespace PascalTriangle
 
 	class Program
 	{
-		readonly Triangle Triangle = new Triangle();
-
 		public static async Task Main()
 		{
 			var p = new Program();
@@ -30,19 +28,19 @@ namespace PascalTriangle
 			ulong column = row / 2;
 			await Search(row, column);
 			await Search(row + 1, column);
+		}
 
-			async ValueTask Search(ulong row, ulong column)
-			{
-				Console.WriteLine("Row {0}, Column {1}:", row, column);
-				var watch = Stopwatch.StartNew();
-				watch.Start();
-				var value = await Triangle.ValueAtAsync(row, column);
-				watch.Stop();
+		static async ValueTask Search(ulong row, ulong column)
+		{
+			Console.WriteLine("Row {0}, Column {1}:", row, column);
+			var watch = Stopwatch.StartNew();
+			watch.Start();
+			var value = await Triangle.ValueAtAsync(row, column);
+			watch.Stop();
 
-				Console.WriteLine(value);
-				Console.WriteLine("Time Elapsed: {0}", watch.Elapsed);
-				Console.WriteLine();
-			}
+			Console.WriteLine(value);
+			Console.WriteLine("Time Elapsed: {0}", watch.Elapsed);
+			Console.WriteLine();
 		}
 	}
 }
