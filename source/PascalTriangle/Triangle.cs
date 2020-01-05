@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace PascalTriangle
 {
-	public class Triangle
+	public static class Triangle
 	{
-		public async ValueTask<BigInteger> ValueAtAsync(ulong row, ulong column)
+		public static async ValueTask<BigInteger> ValueAtAsync(ulong row, ulong column)
 		{
 			if (column == 0 || column == row) return BigInteger.One;
 			if (column == 1) return row;

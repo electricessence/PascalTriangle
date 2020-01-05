@@ -27,30 +27,16 @@ namespace Sharith.Factorial
 			if (n < 20) return XMath.Factorial((byte)n);
 
 			var sieve = new PrimeSieve(n);
-
-			//// -- It is more efficient to add the big swings
-			//// -- first and the small ones later!
-			//var N = n;
-			//while (N >= SmallOddSwing.Length)
-			//{
-			//	results[taskCounter++] = SwingAsync(sieve, N);
-			//	N >>= 1;
-			//}
-
 			return await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n)); ;
 
 			async ValueTask<BigInteger> RecFactorialAsync(int i)
 			{
 				if (i < 2) return BigInteger.One;
+				var swing = SwingAsync(sieve, i);
+				var recFact = RecFactorialAsync(i / 2);
 				await Task.Yield();
-
-				var recFact = RecFactorialAsync(i / 2).ConfigureAwait(false);
-				var swing = i < SmallOddSwing.Length
-						  ? SmallOddSwing[i]
-						  : await SwingAsync(sieve, i).ConfigureAwait(false);
-
-				var sqrFact = BigInteger.Pow(await recFact, 2);
-				return sqrFact * swing;
+				var sqrFact = BigInteger.Pow(await recFact.ConfigureAwait(false), 2);
+				return sqrFact * await swing.ConfigureAwait(false);
 			}
 		}
 
@@ -61,6 +47,9 @@ namespace Sharith.Factorial
 
 		private static async ValueTask<BigInteger> SwingAsync(PrimeSieve sieve, int n)
 		{
+			if (n < SmallOddSwing.Length)
+				return SmallOddSwing[n];
+
 			var primorial = sieve.GetPrimorialAsync(n / 2 + 1, n);
 			await Task.Yield();
 
