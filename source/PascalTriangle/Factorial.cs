@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace PascalTriangle
 {
@@ -18,6 +19,13 @@ namespace PascalTriangle
 			yield return result;
 			result *= ++i;
 			goto next;
+		}
+
+		public static IEnumerable<BigInteger> GetSequence()
+		{
+			using var e = GetSequenceEnumerator();
+			while (e.MoveNext())
+				yield return e.Current;
 		}
 
 		ulong Index = 0;
@@ -47,6 +55,9 @@ namespace PascalTriangle
 
 			throw new Exception("Value missing.");
 		}
+
+		public Task<BigInteger> OfAsync(ulong index)
+			=> Task.Run(() => Of(index));
 
 		public IEnumerator<BigInteger> GetEnumerator()
 		{

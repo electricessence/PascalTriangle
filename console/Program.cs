@@ -7,28 +7,40 @@ namespace PascalTriangle
 
 	class Program
 	{
-		public static async Task Main()
+		readonly Triangle Triangle = new Triangle();
+
+		public static async Task Main() 
 		{
-			const ulong row = 1000000; // Typical stack overflow will happen in less than 3000.
-			const ulong column = row / 2;
-			var rows = new Row.Collection();
+			var p = new Program();
+			await p.Run();
+		}
+
+		async ValueTask Run()
+		{
+			await Test(3000);
+			await Test(1000000);
+
+			Console.ReadKey();
+		}
+
+		async ValueTask Test(ulong row)
+		{
+			ulong column = row / 2;
 			await Search(row, column);
-			//await Search(row + 1, column); // Should be near instantaneous after previous run.
+			await Search(row + 1, column);
 
 			async ValueTask Search(ulong row, ulong column)
 			{
 				Console.WriteLine("Row {0}, Column {1}:", row, column);
 				var watch = Stopwatch.StartNew();
 				watch.Start();
-				var value = await rows[row][column];
+				var value = await Triangle.ValueAtAsync(row, column);
 				watch.Stop();
 
 				Console.WriteLine(value);
 				Console.WriteLine("Time Elapsed: {0}", watch.Elapsed);
 				Console.WriteLine();
 			}
-
-			Console.ReadKey();
 		}
 	}
 }

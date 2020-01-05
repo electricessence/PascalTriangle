@@ -1,12 +1,18 @@
 ﻿using System.Numerics;
+using System.Threading.Tasks;
 
 namespace PascalTriangle
 {
 	public class Triangle
 	{
-		readonly Factorial Factorials = new Factorial();
+		public Triangle(Factorial? factorials = null)
+		{
+			Factorials = factorials ?? new Factorial();
+		}
 
-		public BigInteger ValueAt(ulong row, ulong column)
+		public Factorial Factorials { get; }
+
+		public async ValueTask<BigInteger> ValueAtAsync(ulong row, ulong column)
 		{
 			if (column == 0 || column == row) return BigInteger.One;
 			if (column == 1) return row;
@@ -16,8 +22,12 @@ namespace PascalTriangle
 			if (column > mid) column = row - column;
 			if (column == 1) return row;
 
-			var divisor = Factorials.Of(column) * Factorials.Of(row - column);
-			return Factorials.Of(row) / divisor;
+			var nF = Factorials.OfAsync(row);
+			var kF = Factorials.OfAsync(column);
+			var nkF = Factorials.OfAsync(row - column);
+
+			var divisor = await kF * await nkF;
+			return await nF / divisor;
 		}
 	}
 }
