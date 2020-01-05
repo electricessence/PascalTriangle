@@ -540,7 +540,7 @@ namespace Sharith.Primes
 				if (increment == 1)
 				{
 					primeList = new int[primeCard];
-					System.Array.Copy(sieve.primes, start, primeList, 0, primeCard);
+					Array.Copy(sieve.primes, start, primeList, 0, primeCard);
 				}
 				else
 				{

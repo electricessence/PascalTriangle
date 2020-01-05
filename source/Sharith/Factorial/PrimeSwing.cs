@@ -26,11 +26,10 @@ namespace Sharith.Factorial
 			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), n, "Negative values not supported.");
 			if (n < 20) return XMath.Factorial((byte)n);
 
-			ValueTask<BigInteger>[] results;
 			int taskCounter;
-
 			var sieve = new PrimeSieve(n);
-			results = new ValueTask<BigInteger>[XMath.FloorLog2(n)];
+			var pool = ArrayPool<ValueTask<BigInteger>>.Shared;
+			var results = pool.Rent(XMath.FloorLog2(n));
 			taskCounter = 0;
 
 			// -- It is more efficient to add the big swings
@@ -42,14 +41,15 @@ namespace Sharith.Factorial
 				N >>= 1;
 			}
 
-			return await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n));
+			var result = await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n));
+			pool.Return(results);
+			return result;
 
 			async ValueTask<BigInteger> RecFactorialAsync(int n)
 			{
 				if (n < 2) return BigInteger.One;
-				await Task.Yield();
 
-				var recFact = await RecFactorialAsync(n / 2);
+				var recFact = await RecFactorialAsync(n / 2).ConfigureAwait(false);
 				var sqrFact = BigInteger.Pow(recFact, 2);
 
 				var swing = n < SmallOddSwing.Length
@@ -69,11 +69,13 @@ namespace Sharith.Factorial
 		{
 			var primorial = sieve.GetPrimorialAsync(n / 2 + 1, n);
 			await Task.Yield();
+
 			var count = 0;
 			var rootN = XMath.FloorSqrt(n);
 			var aPrimes = sieve.GetPrimeCollection(3, rootN);
 			var bPrimes = sieve.GetPrimeCollection(rootN + 1, n / 3);
-			var primeList = new int[aPrimes.NumberOfPrimes + bPrimes.NumberOfPrimes];
+			var pool = ArrayPool<int>.Shared;
+			var primeList = pool.Rent(aPrimes.NumberOfPrimes + bPrimes.NumberOfPrimes);
 
 			foreach (var prime in aPrimes)
 			{
@@ -101,7 +103,7 @@ namespace Sharith.Factorial
 			var primeProduct = XMath.ProductAsync(primeList, 0, count);
 			var result = await primeProduct.ConfigureAwait(false)
 				* await primorial.ConfigureAwait(false);
-			//ArrayPool<int>.Shared.Return(primeList);
+			pool.Return(primeList);
 			return result;
 		}
 

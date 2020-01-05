@@ -78,7 +78,7 @@ namespace Sharith.MathUtils
 		{
 			return n < 17
 				? 6
-				: (int)System.Math.Floor(n / (System.Math.Log(n) - 1.5));
+				: (int)Math.Floor(n / (Math.Log(n) - 1.5));
 		}
 
 		/// <summary>
@@ -87,7 +87,7 @@ namespace Sharith.MathUtils
 		/// <param name="value"></param>
 		/// <returns><tt>Log<sub>2</sub>value</tt>.</returns>
 		public static double Log2(double value)
-			=> System.Math.Log(value) * 1.4426950408889634;
+			=> Math.Log(value) * 1.4426950408889634;
 
 		/// <summary>
 		/// Floor of the binary logarithm.
@@ -107,11 +107,8 @@ namespace Sharith.MathUtils
 		/// <returns></returns>
 		public static int FloorSqrt(int n)
 		{
-			if (n < 0)
-			{
-				throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
-			}
-			return (int)System.Math.Floor(System.Math.Sqrt(n));
+			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
+			return (int)Math.Floor(Math.Sqrt(n));
 		}
 
 		/// <summary>
@@ -133,13 +130,9 @@ namespace Sharith.MathUtils
 		/// <returns></returns>
 		public static int Sqrt(int n)
 		{
-			if (n < 0)
-			{
-				throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
-			}
-
 			if (n == 0) return 0;
-
+			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
+			
 			int unten, oben = BitLength(n);
 
 			do
@@ -157,8 +150,7 @@ namespace Sharith.MathUtils
 		{
 			return n < 4
 				? 6
-				: (int)System.Math.Floor(System.Math.Sqrt(n)
-										  + n / (Log2(n) - 1));
+				: (int)Math.Floor(Math.Sqrt(n) + n / (Log2(n) - 1));
 		}
 
 		public static double AsymptFactorial(double x)
@@ -166,7 +158,7 @@ namespace Sharith.MathUtils
 			// error of order O(x^-5)
 			// double ln2Pi = 1.8378770664093455 = Math.log(2 * Math.PI);
 			double a = x + x + 1;
-			return (1.8378770664093455 + System.Math.Log(a / 2) * a - a
+			return (1.8378770664093455 + Math.Log(a / 2) * a - a
 					- (1 - 7 / (30 * a * a)) / (6 * a)) / 2;
 		}
 
@@ -174,8 +166,8 @@ namespace Sharith.MathUtils
 		public static string Exp(double x)
 		{
 			double l = x * 0.43429448190325176D; // x/Math.log(10);
-			double e = System.Math.Floor(l);
-			double m = System.Math.Pow(10, l - e);
+			double e = Math.Floor(l);
+			double m = Math.Pow(10, l - e);
 			string mat = (Convert.ToString(m)).Substring(0, 6);
 			return mat + " E+" + Convert.ToString((int)e);
 		}
@@ -195,7 +187,7 @@ namespace Sharith.MathUtils
 
 		public static BigInteger Factorial(byte n)
 		{
-			if (n > 20)
+			if (n > SmallFactorials.Length)
 				throw new ArgumentOutOfRangeException("max n is 20 but was " + n.ToString());
 
 			return new BigInteger(SmallFactorials[n]);
@@ -210,7 +202,8 @@ namespace Sharith.MathUtils
 			await Task.Yield();
 
 			int len = (length + 1) / 2;
-			long[] b = ArrayPool<long>.Shared.Rent(len);
+			var pool = ArrayPool<long>.Shared;
+			var b = pool.Rent(len);
 			try
 			{
 				int i, j, k;
@@ -232,7 +225,7 @@ namespace Sharith.MathUtils
 			}
 			finally
 			{
-				ArrayPool<long>.Shared.Return(b);
+				pool.Return(b);
 			}
 		}
 
@@ -242,7 +235,8 @@ namespace Sharith.MathUtils
 			await Task.Yield();
 
 			int len = (1 + (length + 1) / 2) / increment;
-			long[] b = ArrayPool<long>.Shared.Rent(len);
+			var pool = ArrayPool<long>.Shared;
+			var b = pool.Rent(len);
 			try
 			{
 				int i, k = 0;
@@ -264,7 +258,7 @@ namespace Sharith.MathUtils
 			}
 			finally
 			{
-				ArrayPool<long>.Shared.Return(b);
+				pool.Return(b);
 			}
 		}
 
