@@ -1,4 +1,7 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace PascalTriangle

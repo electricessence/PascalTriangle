@@ -17,21 +17,54 @@ namespace PascalTriangle.Tests
 		 7	   1   7  21  35  35  21   7   1
 		 */
 
-		[Fact]
-		public async Task BasicExpectationTests()
+		readonly Row.Collection TriangleRowCollection = new Row.Collection();
+
+		[Theory]
+		[InlineData(1, 0, 0)]
+		[InlineData(1, 1, 0)]
+		[InlineData(1, 2, 0)]
+		[InlineData(1, 1, 1)]
+		[InlineData(1, 3, 3)]
+		[InlineData(2, 2, 1)]
+		[InlineData(3, 3, 1)]
+		[InlineData(6, 4, 2)]
+		[InlineData(4, 4, 3)]
+		[InlineData(15, 6, 2)]
+		[InlineData(35, 7, 3)]
+		public async Task A_StaticCalculationTests(ulong expected, ulong row, ulong column)
 		{
-			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(0, 0));
-			Assert.Equal(BigInteger.Zero, await Triangle.ValueAtAsync(0, 1));
-			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(1, 0));
-			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(2, 0));
-			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(1, 1));
-			Assert.Equal(BigInteger.One, await Triangle.ValueAtAsync(3, 3));
-			Assert.Equal(2, await Triangle.ValueAtAsync(2, 1));
-			Assert.Equal(3, await Triangle.ValueAtAsync(3, 1));
-			Assert.Equal(6, await Triangle.ValueAtAsync(4, 2));
-			Assert.Equal(4, await Triangle.ValueAtAsync(4, 3));
-			Assert.Equal(15, await Triangle.ValueAtAsync(6, 2));
-			Assert.Equal(35, await Triangle.ValueAtAsync(7, 3));
+			Assert.Equal(expected, await Triangle.ValueAtAsync(row, column));
+		}
+
+		[Theory]
+		[InlineData(1, 0, 0)]
+		[InlineData(1, 1, 0)]
+		[InlineData(1, 2, 0)]
+		[InlineData(1, 1, 1)]
+		[InlineData(1, 3, 3)]
+		[InlineData(2, 2, 1)]
+		[InlineData(3, 3, 1)]
+		[InlineData(6, 4, 2)]
+		[InlineData(4, 4, 3)]
+		[InlineData(15, 6, 2)]
+		[InlineData(35, 7, 3)]
+		public async Task B_TriangleRowCollectionTests(ulong expected, ulong row, ulong column)
+		{
+			Assert.Equal(expected, await TriangleRowCollection[row][column]);
+		}
+
+		[Fact]
+		public async Task B_First100Rows()
+		{
+			for (ulong row = 0; row < 100; ++row)
+			{
+				for (ulong column = 0; column < row; ++column)
+				{
+					Assert.Equal(
+						await Triangle.ValueAtAsync(row, column),
+						await TriangleRowCollection[row][column]);
+				}
+			}
 		}
 	}
 }

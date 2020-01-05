@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -16,8 +17,6 @@ namespace PascalTriangle
 		// 3) using ulong instead of int.
 		readonly ConcurrentDictionary<ulong, Lazy<Task<BigInteger>>> Values = new ConcurrentDictionary<ulong, Lazy<Task<BigInteger>>>();
 
-		Dictionary<ulong, BigInteger>? _fullRow;
-
 		public Row(ulong number, Collection collection)
 		{
 			Number = number; // Also corresponds to the number entries in the row.
@@ -25,28 +24,52 @@ namespace PascalTriangle
 			Mid = number / 2 + number % 2; // 1 = 1, 2 = 1, 3 = 2, 4 = 2, 5 = 3 etc..
 		}
 
-		public readonly ulong Number;
+		public ulong Number { get; }
 		readonly ulong Mid;
 		public Collection Rows { get; }
 
-		public async ValueTask<BigInteger> GetValueAt(ulong index)
+		public bool IsNonComputeValue(ref ulong index, out BigInteger value)
 		{
-			if (index <= 0) return BigInteger.Zero;
-			if (index == 1 || index == Number) return BigInteger.One;
-			if (index > Number) return BigInteger.Zero;
-			// dedupe the index:
-			if (index > Mid) index = Number - index + 1;
-
-			// The index also corresponds to the first full row needed.
-			for (var r = index; r > 0; r--)
+			value = BigInteger.One;
+			if (index == 0 || index == Number) return true;
+			if (index > Number) throw new ArgumentOutOfRangeException(nameof(index), index, "Value is greater than the number of entries in the row.");
+			if (index > Mid) index = Number - index;
+			if (index == 1)
 			{
-
+				value = Number;
+				return true;
 			}
 
-			var fullRow = _fullRow;
-			return fullRow == null
-				? await Values.GetOrAdd(index, GetEntry).Value.ConfigureAwait(false) // By using a Lazy we guarantee pessimistic concurrency (only 1 task runs);
-				: fullRow[index];
+			return false;
+		}
+
+		public bool TryGetValue(ulong index, [NotNullWhen(true)] out Task<BigInteger>? result)
+		{
+			if (IsNonComputeValue(ref index, out var value))
+			{
+				result = Task.FromResult(value);
+				return true;
+			}
+
+			if (Values.TryGetValue(index, out var lazy))
+			{
+				result = lazy.Value;
+				return true;
+			}
+
+			result = null;
+			return false;
+		}
+
+		public async ValueTask<BigInteger> GetValueAtAsync(ulong index, ushort crawlDepth = 2)
+		{
+			if (IsNonComputeValue(ref index, out var value))
+				return value;
+
+			return await Values
+				.GetOrAdd(index, GetEntry)
+				.Value // By using a Lazy we guarantee pessimistic concurrency (only 1 task runs);
+				.ConfigureAwait(false);
 
 			Lazy<Task<BigInteger>> GetEntry(ulong key)
 				 => new Lazy<Task<BigInteger>>(() => GetValue(key));
@@ -54,14 +77,26 @@ namespace PascalTriangle
 			async Task<BigInteger> GetValue(ulong key)
 			{
 				await Task.Yield(); // Here's the key to avoiding stack overflow.  Tasks get added to the scheduler instead of the stack.
-				var row = Rows.GetRowAt(Number - 1);
-				var a = row.GetValueAt(key - 1);
-				var b = row.GetValueAt(key);
+				var previousRow = Rows.GetRowAt(Number - 1);
+
+				// Both predecessors are availalbe?
+				previousRow.TryGetValue(key - 1, out var aEntry);
+				if (previousRow.TryGetValue(key, out var bEntry) && aEntry != null)
+					return await aEntry.ConfigureAwait(false) + await bEntry.ConfigureAwait(false);
+
+				// Neither?
+				if (crawlDepth == 0 || aEntry is null && bEntry is null)
+					return await Triangle.ValueAtAsync(Number, key);
+
+				// At this point, crawldepth is greater than zero and one of the entries is not null.
+				--crawlDepth;
+				var a = previousRow.GetValueAtAsync(key - 1, crawlDepth);
+				var b = previousRow.GetValueAtAsync(key, crawlDepth);
 				return await a.ConfigureAwait(false) + await b.ConfigureAwait(false);
 			}
 		}
 
-		public ValueTask<BigInteger> this[ulong index] => GetValueAt(index);
+		public ValueTask<BigInteger> this[ulong index] => GetValueAtAsync(index);
 
 		public class Collection : IEnumerable<Row>
 		{
@@ -69,8 +104,6 @@ namespace PascalTriangle
 
 			public Row GetRowAt(ulong index)
 				=> Rows.GetOrAdd(index, key => new Row(key, this));
-
-			public ulong FullRowCount { get; internal set; }
 
 			public Row this[ulong index] => GetRowAt(index);
 

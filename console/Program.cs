@@ -7,6 +7,8 @@ namespace PascalTriangle
 
 	class Program
 	{
+		readonly Row.Collection RowCollection = new Row.Collection();
+
 		public static async Task Main()
 		{
 			var p = new Program();
@@ -30,12 +32,12 @@ namespace PascalTriangle
 			await Search(row + 1, column);
 		}
 
-		static async ValueTask Search(ulong row, ulong column)
+		async ValueTask Search(ulong row, ulong column)
 		{
 			Console.WriteLine("Row {0}, Column {1}:", row, column);
 			var watch = Stopwatch.StartNew();
 			watch.Start();
-			var value = await Triangle.ValueAtAsync(row, column);
+			var value = await RowCollection[row][column];
 			watch.Stop();
 
 			Console.WriteLine(value);
