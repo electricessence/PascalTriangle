@@ -26,36 +26,30 @@ namespace Sharith.Factorial
 			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), n, "Negative values not supported.");
 			if (n < 20) return XMath.Factorial((byte)n);
 
-			int taskCounter;
 			var sieve = new PrimeSieve(n);
-			var pool = ArrayPool<ValueTask<BigInteger>>.Shared;
-			var results = pool.Rent(XMath.FloorLog2(n));
-			taskCounter = 0;
 
-			// -- It is more efficient to add the big swings
-			// -- first and the small ones later!
-			var N = n;
-			while (N >= SmallOddSwing.Length)
+			//// -- It is more efficient to add the big swings
+			//// -- first and the small ones later!
+			//var N = n;
+			//while (N >= SmallOddSwing.Length)
+			//{
+			//	results[taskCounter++] = SwingAsync(sieve, N);
+			//	N >>= 1;
+			//}
+
+			return await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n)); ;
+
+			async ValueTask<BigInteger> RecFactorialAsync(int i)
 			{
-				results[taskCounter++] = SwingAsync(sieve, N);
-				N >>= 1;
-			}
+				if (i < 2) return BigInteger.One;
+				await Task.Yield();
 
-			var result = await RecFactorialAsync(n).ConfigureAwait(false) << (n - XMath.BitCount(n));
-			pool.Return(results);
-			return result;
+				var recFact = RecFactorialAsync(i / 2).ConfigureAwait(false);
+				var swing = i < SmallOddSwing.Length
+						  ? SmallOddSwing[i]
+						  : await SwingAsync(sieve, i).ConfigureAwait(false);
 
-			async ValueTask<BigInteger> RecFactorialAsync(int n)
-			{
-				if (n < 2) return BigInteger.One;
-
-				var recFact = await RecFactorialAsync(n / 2).ConfigureAwait(false);
-				var sqrFact = BigInteger.Pow(recFact, 2);
-
-				var swing = n < SmallOddSwing.Length
-						  ? SmallOddSwing[n]
-						  : await results[--taskCounter].ConfigureAwait(false);
-
+				var sqrFact = BigInteger.Pow(await recFact, 2);
 				return sqrFact * swing;
 			}
 		}
