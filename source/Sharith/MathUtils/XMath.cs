@@ -132,7 +132,7 @@ namespace Sharith.MathUtils
 		{
 			if (n == 0) return 0;
 			if (n < 0) throw new ArgumentOutOfRangeException(nameof(n) + " >= 0 required");
-			
+
 			int unten, oben = BitLength(n);
 
 			do
