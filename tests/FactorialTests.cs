@@ -17,24 +17,13 @@ namespace PascalTriangle.Tests
 			}
 		}
 
-		[Fact]
-		public static void InstanceEnumerationTests()
-		{
-			using var e = new Factorial().GetEnumerator();
-			for (var i = 0; i < Expected.Length; ++i)
-			{
-				e.MoveNext();
-				Assert.Equal(Expected[i], e.Current);
-			}
-		}
 
 		[Fact]
 		public static void InstanceReverseLookupTests()
 		{
-			var f = new Factorial();
 			for (ulong i = (ulong)Expected.Length; i > 0; --i)
 			{
-				Assert.Equal(Expected[i - 1], f.Of(i - 1));
+				Assert.Equal(Expected[i - 1], Factorial.Of(i - 1));
 			}
 		}
 

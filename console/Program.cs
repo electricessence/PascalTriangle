@@ -9,7 +9,7 @@ namespace PascalTriangle
 	{
 		readonly Triangle Triangle = new Triangle();
 
-		public static async Task Main() 
+		public static async Task Main()
 		{
 			var p = new Program();
 			await p.Run();
@@ -18,6 +18,8 @@ namespace PascalTriangle
 		async ValueTask Run()
 		{
 			await Test(3000);
+			await Test(10000);
+			await Test(100000);
 			await Test(1000000);
 
 			Console.ReadKey();

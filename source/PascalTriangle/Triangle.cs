@@ -5,13 +5,6 @@ namespace PascalTriangle
 {
 	public class Triangle
 	{
-		public Triangle(Factorial? factorials = null)
-		{
-			Factorials = factorials ?? new Factorial();
-		}
-
-		public Factorial Factorials { get; }
-
 		public async ValueTask<BigInteger> ValueAtAsync(ulong row, ulong column)
 		{
 			if (column == 0 || column == row) return BigInteger.One;
@@ -22,9 +15,9 @@ namespace PascalTriangle
 			if (column > mid) column = row - column;
 			if (column == 1) return row;
 
-			var nF = Factorials.OfAsync(row);
-			var kF = Factorials.OfAsync(column);
-			var nkF = Factorials.OfAsync(row - column);
+			var nF = Factorial.OfAsync(row);
+			var kF = Factorial.OfAsync(column);
+			var nkF = Factorial.OfAsync(row - column);
 
 			var divisor = await kF * await nkF;
 			return await nF / divisor;
