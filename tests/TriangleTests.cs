@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace PascalTriangle.Tests
@@ -18,7 +17,7 @@ namespace PascalTriangle.Tests
 		 */
 
 		[Fact]
-		public async Task BasicExpectationTests()
+		public void BasicExpectationTests()
 		{
 			// https://projecteuler.net/problem=148
 			var triangle = new Triangle();

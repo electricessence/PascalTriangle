@@ -28,9 +28,9 @@ namespace PascalTriangle
 
 		public BigInteger Of(ulong index)
 		{
-			while(Index < index && Index < ulong.MaxValue)
+			while (Index < index && Index < ulong.MaxValue)
 			{
-				lock(Values)
+				lock (Values)
 				{
 					if (Index >= index)
 						break;
