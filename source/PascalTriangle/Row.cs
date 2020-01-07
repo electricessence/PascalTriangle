@@ -61,7 +61,7 @@ namespace PascalTriangle
 			return false;
 		}
 
-		public async ValueTask<BigInteger> GetValueAtAsync(ulong index, ushort crawlDepth = 2)
+		public async ValueTask<BigInteger> GetValueAtAsync(ulong index, ulong crawlDepth = 2)
 		{
 			if (IsNonComputeValue(ref index, out var value))
 				return value;
@@ -98,12 +98,21 @@ namespace PascalTriangle
 
 		public ValueTask<BigInteger> this[ulong index] => GetValueAtAsync(index);
 
+		public async ValueTask PreloadAllValues()
+		{
+			for (ulong i = 2; i <= Mid; i++)
+				await GetValueAtAsync(i);
+		}
+
 		public class Collection : IEnumerable<Row>
 		{
 			readonly ConcurrentDictionary<ulong, Row> Rows = new ConcurrentDictionary<ulong, Row>();
 
 			public Row GetRowAt(ulong index)
 				=> Rows.GetOrAdd(index, key => new Row(key, this));
+
+			public bool RemoveRow(ulong index)
+				=> Rows.TryRemove(index, out _);
 
 			public Row this[ulong index] => GetRowAt(index);
 

@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PascalTriangle.Tests", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sharith", "source\Sharith\Sharith.csproj", "{2AD0B2BE-02E8-4F03-9E0B-5CF5FD642301}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectEuler.Problem148", "Project Euler\ProjectEuler.Problem148\ProjectEuler.Problem148.csproj", "{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,14 @@ Global
 		{2AD0B2BE-02E8-4F03-9E0B-5CF5FD642301}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2AD0B2BE-02E8-4F03-9E0B-5CF5FD642301}.Release|x64.ActiveCfg = Release|Any CPU
 		{2AD0B2BE-02E8-4F03-9E0B-5CF5FD642301}.Release|x64.Build.0 = Release|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Debug|x64.Build.0 = Debug|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Release|x64.ActiveCfg = Release|Any CPU
+		{176B8FE4-ABEA-4AF8-993D-228272F6E2B5}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
